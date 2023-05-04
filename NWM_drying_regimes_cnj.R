@@ -29,18 +29,30 @@ library(nhdplusTools)
 library(sf)
 library(parallel)
 library(dataRetrieval)
-library(nhdplusTools)
 
 #download gage data
-gages <- read_csv("data//PNW_DryingRegimeGages.csv")
+gages <- read_csv("data//dryingRegimes_data_RF.csv") %>% select(gage) 
 
 #define period of study
-dates <- seq(ymd('1999-10-01'),ymd('1999-10-10'), by = '1 day')
+dates <- seq(ymd('1979-10-01'), ymd('2020-09-30'), by = '1 day')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Step 2: Add COMID to gage info ------------------------------------------------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Create function
+#tidy gages
+gages <- gages %>% 
+  #Reduce to unique ids
+  unique() %>% 
+  #Determine number of characters
+  mutate(n_char = nchar(gage)) %>% 
+  #Fix number of characters if odd
+  mutate(gage = as.character(gage)) %>% 
+  mutate(gage = if_else(n_char == 7, paste0(0,gage), gage)) %>% 
+  mutate(gage = if_else(n_char == 9, paste0(0,gage), gage)) %>% 
+  #remove n_char
+  select(-n_char)
+
+#Create function to snage reach code
 fun <- function(n){
   #Get COMID
   output <- findNLDI(nwis = gages$gage[n]) %>% 
@@ -52,13 +64,36 @@ fun <- function(n){
   output
 }
 
-#Execute function
-gages <- lapply(
-    X = seq(1, nrow(gages)), 
-    FUN = fun) %>% 
-  bind_rows() %>% 
-  left_join(., gages)
-    
+#Create error catching fun
+error_fun <- function(n){
+  tryCatch(
+    fun(n), 
+    error = function(e) tibble(comid = NA, reachcode = NA, gage = gages$gage[n]))
+}
+
+#Prep Clusters
+n.cores<-detectCores()-1
+cl<-makeCluster(n.cores)
+clusterEvalQ(cl, {
+  library(tidyverse)
+  library(dataRetrieval)
+  library(sf)
+})
+clusterExport(cl, c("gages", "fun"))
+
+#Run in parallel
+gages<-parLapply(cl,seq(1, nrow(gages)),error_fun)
+
+#Now, bind rows from list output
+gages<-gages %>% bind_rows()
+
+#Stop the clusters
+stopCluster(cl)
+
+#Export for posterity 
+write_csv(gages, "data//gage_comid_reachcode.csv")
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Step 3: Download NWM data -----------------------------------------------------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,8 +177,8 @@ nwm <- left_join(
 #Download data
 nwis<-readNWISdv(siteNumbers = gages$gage, 
                parameterCd = '00060',
-               startDate = '1999-10-01', 
-               endDate = '2000-09-30')
+               startDate = '1979-10-01', 
+               endDate = '2020-09-30')
 
 #Tidy Data
 nwis<-nwis %>% 
@@ -165,3 +200,4 @@ df <- left_join(
   nwis
 )
   
+#Next steps...create low flow threshold for nwm data, then calc drying metrics
