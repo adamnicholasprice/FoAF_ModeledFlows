@@ -171,33 +171,36 @@ nwm <- left_join(
   gages %>% select(gage, comid) 
 )
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Step 4: Download NWIS data ----------------------------------------------------
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Download data
-nwis<-readNWISdv(siteNumbers = gages$gage, 
-               parameterCd = '00060',
-               startDate = '1979-10-01', 
-               endDate = '2020-09-30')
+#Export CSV
+write.csv(nwm, "data/nwm.csv")
 
-#Tidy Data
-nwis<-nwis %>% 
-  as_tibble() %>% 
-  select(
-    gage = site_no,
-    date = Date, 
-    flow = X_00060_00003) %>% 
-  mutate(
-    date = ymd(date), 
-    nwis_flow_cms = 0.0283168*flow) %>% 
-  select(gage,date, nwis_flow_cms)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Step 5: Combine data ----------------------------------------------------------
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-df <- left_join(
-  nwm %>% mutate(gage = as.character(gage)),
-  nwis
-)
-  
-#Next steps...create low flow threshold for nwm data, then calc drying metrics
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# #Step 4: Download NWIS data ----------------------------------------------------
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# #Download data
+# nwis<-readNWISdv(siteNumbers = gages$gage, 
+#                parameterCd = '00060',
+#                startDate = '1979-10-01', 
+#                endDate = '2020-09-30')
+# 
+# #Tidy Data
+# nwis<-nwis %>% 
+#   as_tibble() %>% 
+#   select(
+#     gage = site_no,
+#     date = Date, 
+#     flow = X_00060_00003) %>% 
+#   mutate(
+#     date = ymd(date), 
+#     nwis_flow_cms = 0.0283168*flow) %>% 
+#   select(gage,date, nwis_flow_cms)
+# 
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# #Step 5: Combine data ----------------------------------------------------------
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# df <- left_join(
+#   nwm %>% mutate(gage = as.character(gage)),
+#   nwis
+# )
+#   
+# #Next steps...create low flow threshold for nwm data, then calc drying metrics
