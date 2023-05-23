@@ -1,15 +1,9 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Title: NWM Drying Regimes Exploratory Script
+#Title: NWM Data download
 #Date: 5/3/2023
 #Coder: Nate Jones (cnjones7@ua.edu)
-#Purpose: Calculate drying regime metrics for NWM output
+#Purpose: Download NWM Data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#Initial Analysis Steps: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Step 1: Download NWM and NWIS data
-#Step 2: Calculate drying regime metrics
-#   Note, we may have to define zero here. 
-#Step 3: Compare
 
 #Data sources:
 #NWM data at USGS gage locations (https://www.sciencebase.gov/catalog/item/612e264ed34e40dd9c091228)
@@ -174,33 +168,31 @@ nwm <- left_join(
 #Export CSV
 write.csv(nwm, "data/nwm.csv")
 
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# #Step 4: Download NWIS data ----------------------------------------------------
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# #Download data
-# nwis<-readNWISdv(siteNumbers = gages$gage, 
-#                parameterCd = '00060',
-#                startDate = '1979-10-01', 
-#                endDate = '2020-09-30')
-# 
-# #Tidy Data
-# nwis<-nwis %>% 
-#   as_tibble() %>% 
-#   select(
-#     gage = site_no,
-#     date = Date, 
-#     flow = X_00060_00003) %>% 
-#   mutate(
-#     date = ymd(date), 
-#     nwis_flow_cms = 0.0283168*flow) %>% 
-#   select(gage,date, nwis_flow_cms)
-# 
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# #Step 5: Combine data ----------------------------------------------------------
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# df <- left_join(
-#   nwm %>% mutate(gage = as.character(gage)),
-#   nwis
-# )
-#   
-# #Next steps...create low flow threshold for nwm data, then calc drying metrics
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Step 4: Download NWIS data ----------------------------------------------------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Download data
+nwis<-readNWISdv(siteNumbers = gages$gage,
+               parameterCd = '00060',
+               startDate = '1979-10-01',
+               endDate = '2020-09-30')
+
+#Tidy Data
+nwis<-nwis %>%
+  as_tibble() %>%
+  select(
+    gage = site_no,
+    date = Date,
+    flow = X_00060_00003) %>%
+  mutate(
+    date = ymd(date),
+    nwis_flow_cms = 0.0283168*flow) %>%
+  select(gage,date, nwis_flow_cms)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Step 5: Combine data ----------------------------------------------------------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+df <- left_join(
+  nwm %>% mutate(gage = as.character(gage)),
+  nwis
+)
