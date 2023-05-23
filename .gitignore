@@ -166,3 +166,10 @@ cython_debug/
 #.idea/
 >>>>>>> 6d52ac35dc1ee40aa53ce1dcf2f54644050de08c
 .Rproj.user
+
+
+
+#Added by NateDog for his workflow
+.Rdata
+.Rhistory
+FoAF_ModeledFlows.Rproj
