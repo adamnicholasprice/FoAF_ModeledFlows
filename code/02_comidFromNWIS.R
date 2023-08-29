@@ -26,13 +26,14 @@ ap_NLDI <- function(x){
 gageNHD = tibble(lapply(dat$gage,ap_NLDI)) %>%
   unlist() %>%
   data_frame() %>%
+  cbind(.,dat$gage)%>%
   rename_with(.cols=1,~"comid")
+
+colnames(gageNHD) <- c('comid','gage')
 
 
 pnwNP <- dat %>%
-  left_join(x=dat,y=gageInfo, by=join_by(gage == site_no))
-  
-pnwNP = data.frame(cbind(pnwNP,gageNHD))
-pnwNP$X = NULL
+  left_join(x=dat,y=gageNHD, by=join_by(gage))
+
 
 write.csv(pnwNP,'../data/pnwNP_Info.csv',row.names = F)
