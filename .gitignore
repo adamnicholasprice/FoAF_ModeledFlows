@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+cache/
+/cache
 .DS_store
 /data
 /docs
